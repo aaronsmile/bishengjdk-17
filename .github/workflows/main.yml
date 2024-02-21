@@ -29,9 +29,7 @@ on:
   push:
     branches-ignore:
       - main
-  pull_request:
-    branches:
-      - main
+      - pr/*
   workflow_dispatch:
     inputs:
       platforms:
@@ -57,7 +55,6 @@ jobs:
 
   select:
     name: 'Select platforms'
-    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name }}
     runs-on: ubuntu-22.04
     outputs:
       linux-x64: ${{ steps.include.outputs.linux-x64 }}
@@ -82,7 +79,7 @@ jobs:
           function check_platform() {
             if [[ $GITHUB_EVENT_NAME == workflow_dispatch ]]; then
               input='${{ github.event.inputs.platforms }}'
-            elif [[ $GITHUB_EVENT_NAME == push ]] || [[ $GITHUB_EVENT_NAME == pull_request ]]; then
+            elif [[ $GITHUB_EVENT_NAME == push ]]; then
               if [[ '${{ !secrets.JDK_SUBMIT_FILTER || startsWith(github.ref, 'refs/heads/submit/') }}' == 'false' ]]; then
                 # If JDK_SUBMIT_FILTER is set, and this is not a "submit/" branch, don't run anything
                 >&2 echo 'JDK_SUBMIT_FILTER is set and not a "submit/" branch'
@@ -319,7 +316,7 @@ jobs:
   remove-bundles:
     name: 'Remove bundle artifacts'
     runs-on: ubuntu-22.04
-    if: ${{ github.event_name != 'pull_request' || github.repository != 'aaronsmile/bishengjdk-17' }}
+    if: always()
     needs:
       - build-linux-x64
       - build-linux-x86
